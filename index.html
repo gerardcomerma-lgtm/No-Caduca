@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>No Caduca</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f4ee;--card:#fff;--tx:#1f2a1f;--mu:#6b756b;--ac:#2f7d4f;--bd:#e3e0d6;--red:#c0392b;--org:#d9822b;--grn:#2f7d4f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a15;--card:#1d251e;--tx:#e8efe8;--mu:#93a093;--ac:#4cb673;--bd:#2e3a30;--red:#e5604f;--org:#e8a04d;--grn:#4cb673}}
+:root[data-theme="dark"]{--bg:#141a15;--card:#1d251e;--tx:#e8efe8;--mu:#93a093;--ac:#4cb673;--bd:#2e3a30;--red:#e5604f;--org:#e8a04d;--grn:#4cb673}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+.w{max-width:960px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:8px 0 2px}h2{font-size:1.1rem;margin:0 0 10px}
+.sub{color:var(--mu);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input,select,button{font:inherit;padding:9px 10px;border-radius:9px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+input{flex:1;min-width:110px}
+button{cursor:pointer;background:var(--ac);color:#fff;border:0;font-weight:600}
+button.g{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+.alert{border-radius:14px;padding:14px 16px;margin-bottom:14px;background:color-mix(in srgb,var(--red) 16%,var(--card));border:2px solid var(--red);font-size:1.05rem}
+.alert b.t{display:block;font-size:1.2rem;color:var(--red);margin-bottom:6px}
+.chip{display:inline-block;background:var(--red);color:#fff;font-weight:700;border-radius:99px;padding:3px 11px;margin:3px 5px 3px 0;font-size:.9rem}
+.chip.o{background:var(--org)}
+.it{border-left:6px solid transparent;padding-left:10px;border-radius:8px;margin-bottom:4px}
+.it.u .n{font-weight:700}
+.it.u .b{font-size:.9rem;padding:5px 12px;animation:p 1.4s ease-in-out infinite}
+@keyframes p{50%{transform:scale(1.08);box-shadow:0 0 0 5px color-mix(in srgb,var(--red) 25%,transparent)}}
+@media (prefers-reduced-motion:reduce){.it.u .b{animation:none}}
+.ok{background:color-mix(in srgb,var(--grn) 12%,var(--card));border-color:var(--grn)}
+.it{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.it:last-child{border:0}.it .n{flex:1}.it small{color:var(--mu);display:block}
+.b{font-size:.78rem;font-weight:700;padding:3px 9px;border-radius:99px;color:#fff;white-space:nowrap}
+.x{background:none;color:var(--mu);padding:4px 8px;border:0;font-size:1.1rem}
+.em{font-size:1.4rem}
+.tag{display:inline-block;font-size:.8rem;padding:2px 8px;border-radius:99px;border:1px solid var(--bd);margin:2px 4px 2px 0}
+.tag.h{background:color-mix(in srgb,var(--ac) 18%,transparent);border-color:var(--ac)}
+.tag.u{border-color:var(--red);color:var(--red)}
+ol{padding-left:20px;margin:8px 0}li{margin:6px 0}
+.empty{color:var(--mu);text-align:center;padding:18px 0}
+.foot{color:var(--mu);font-size:.8rem;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>🥬 No Caduca</h1>
+<p class="sub">Controla el que tens, rep avisos abans que caduqui i cuina amb el que s'ha de gastar primer.</p>
+<div id="alert"></div>
+<div class="grid">
+<div>
+<div class="card">
+<h2>📷 Escanejar codi de barres</h2>
+<div class="row"><button id="scan">Obrir càmera</button><input id="code" inputmode="numeric" placeholder="o escriu el codi (EAN)"><button class="g" id="lookup">Buscar</button></div>
+<video id="vid" playsinline muted style="display:none;width:100%;border-radius:10px;margin-top:10px;background:#000"></video>
+<p class="sub" id="msg" style="margin:8px 0 0;font-size:.85rem">Apunta la càmera al codi de barres de l'envàs.</p>
+</div>
+<div class="card">
+<h2>Afegir aliment</h2>
+<div class="row">
+<select id="name" style="flex:1;min-width:150px"></select>
+<select id="loc"><option>Nevera</option><option>Congelador</option><option>Rebost</option></select>
+</div>
+<div class="row" id="nw" style="display:none;margin-top:8px"><input id="nn" placeholder="Nom del nou aliment"><input id="nd" type="number" min="1" max="3650" placeholder="Dies que dura"></div>
+<div class="row" style="margin-top:8px">
+<input id="date" type="date" title="Data de caducitat">
+<button id="add">Afegir</button>
+</div>
+<p class="sub" style="margin:8px 0 0;font-size:.85rem" id="hint">Tria de la llista o crea un aliment nou amb l'última opció. Si deixes la data buida, la calculem amb la durada habitual de l'aliment.</p>
+</div>
+<div class="card">
+<h2>El meu rebost <span id="cnt" class="sub"></span></h2>
+<div id="list"></div>
+</div>
+</div>
+<div>
+<div class="card">
+<h2>👩‍🍳 Recepta recomanada</h2>
+<div id="rec"></div>
+</div>
+</div>
+</div>
+<p class="foot">Prototip · les dades es guarden només en aquest navegador</p>
+</div>
+<script>
+const CAT={"Bacallà":[3,"🐟"],"Botifarra":[10,"🌭"],"Bacó":[10,"🥓"],"Alvocat":[4,"🥑"],"Porro":[14,"🌿"],"Col":[10,"🥬"],"Mozzarella":[10,"🧀"],"Wraps":[30,"🌯"],"Calamars":[2,"🦑"],"Musclos":[2,"🐚"],"Raïm":[7,"🍇"],"Meló":[5,"🍈"],"Mató":[7,"🧀"],"Nyoquis":[30,"🥟"],"Remolatxa":[14,"🍠"],"Cigrons":[365,"🫘"],"Llenties":[365,"🫘"],"Bròquil":[7,"🥦"],"Coliflor":[7,"🥦"],"Salmó":[2,"🐟"],"Gambes":[2,"🦐"],"Pera":[10,"🍐"],"Maduixes":[3,"🍓"],"Salsitxes":[7,"🌭"],"Cuscús":[365,"🍚"],"Mongetes tendres":[5,"🫛"],"Llet":[7,"🥛"],"Iogurt":[14,"🥣"],"Ous":[28,"🥚"],"Formatge":[21,"🧀"],"Pollastre":[2,"🍗"],"Carn picada":[2,"🥩"],"Peix fresc":[2,"🐟"],"Tomàquet":[7,"🍅"],"Enciam":[5,"🥬"],"Pastanaga":[21,"🥕"],"Ceba":[30,"🧅"],"Patata":[30,"🥔"],"Pebrot":[7,"🫑"],"Albergínia":[7,"🍆"],"Carbassó":[7,"🥒"],"Pa":[3,"🍞"],"Arròs":[365,"🍚"],"Pasta":[365,"🍝"],"Plàtan":[5,"🍌"],"Poma":[21,"🍎"],"Taronja":[14,"🍊"],"Mantega":[60,"🧈"],"Nata":[10,"🥛"],"Bolets":[5,"🍄"],"Espinacs":[4,"🥬"],"All":[60,"🧄"],"Cogombre":[7,"🥒"],"Pernil dolç":[5,"🍖"],"Tonyina llauna":[730,"🥫"]};
+const REC=[
+["Truita de patata",["Ous","Patata","Ceba"],["Pela i talla la patata i la ceba a làmines fines.","Fregeix-les a foc mitjà amb oli fins que siguin toves.","Bat els ous, barreja-ho tot i quallala a la paella 3-4 min per banda."]],
+["Pasta amb tomàquet i formatge",["Pasta","Tomàquet","Formatge"],["Bull la pasta 9-10 min amb sal.","Sofregeix el tomàquet ratllat 8 min amb una mica d'oli.","Barreja la pasta amb la salsa i acaba amb formatge ratllat."]],
+["Amanida completa",["Enciam","Tomàquet","Cogombre","Ceba","Tonyina llauna"],["Renta i talla l'enciam, el tomàquet i el cogombre.","Afegeix ceba en juliana fina i la tonyina escorreguda.","Amaneix amb oli, vinagre i sal."]],
+["Arròs amb pollastre i verdures",["Arròs","Pollastre","Pebrot","Ceba"],["Talla el pollastre a daus i daura'l a la cassola.","Afegeix ceba i pebrot picats i sofregeix 5 min.","Incorpora l'arròs i el doble d'aigua; cou 18 min a foc suau."]],
+["Crema de verdures",["Patata","Pastanaga","Ceba","Carbassó"],["Pela i talla totes les verdures a trossos.","Cou-les 25 min en aigua amb sal just cobertes.","Tritura-ho i ajusta la textura amb una mica de l'aigua de cocció."]],
+["Truita d'espinacs",["Ous","Espinacs","Formatge"],["Saltetja els espinacs 2 min amb una mica d'oli.","Bat els ous i barreja amb els espinacs i el formatge.","Quallala a la paella 3 min per banda."]],
+["Batut de plàtan i iogurt",["Plàtan","Llet","Iogurt"],["Pela el plàtan i talla'l a trossos.","Posa-ho tot a la batedora amb la llet i el iogurt.","Tritura 1 minut i serveix fred."]],
+["Entrepà de pernil i formatge",["Pa","Pernil dolç","Formatge"],["Talla el pa per la meitat.","Posa-hi pernil i formatge.","Escalfa'l a la planxa 2 min per banda."]],
+["Pasta amb bolets i nata",["Pasta","Bolets","Nata","All"],["Bull la pasta al dente.","Saltetja els bolets laminats amb all 5 min.","Afegeix la nata, redueix 2 min i barreja amb la pasta."]],
+["Escalivada",["Pebrot","Albergínia","Ceba","Pa"],["Courà les verdures senceres al forn a 200 °C durant 45 min.","Deixa-les refredar tapades i pela-les.","Talla-les a tires, amaneix amb oli i sal i serveix amb pa."]],
+["Hamburgueses casolanes",["Carn picada","Ceba","Pa","Ous"],["Barreja la carn amb ceba picada, un ou i sal.","Forma'n boles aixafades i couen-les a la planxa 4 min per banda.","Serveix-les dins del pa."]],
+["Truita de carbassó",["Ous","Carbassó","Ceba"],["Talla el carbassó i la ceba a daus petits i sofregeix-los 8 min.","Bat els ous i barreja-ho tot.","Quallala a la paella 3-4 min per banda."]],
+["Amanida de pasta",["Pasta","Tomàquet","Tonyina llauna","Cogombre"],["Bull la pasta, escorre-la i refreda-la.","Talla el tomàquet i el cogombre a daus.","Barreja-ho amb la tonyina i amaneix amb oli i sal."]],
+["Pollastre al forn amb verdures",["Pollastre","Patata","Pastanaga","Ceba"],["Talla les verdures a trossos i posa-les en una safata.","Hi afegeix el pollastre amb sal, oli i una mica d'all.","Couen-ho a 200 °C durant 45 min."]],
+["Verdures saltejades amb ou",["Pebrot","Carbassó","Albergínia","Ous"],["Talla totes les verdures a daus.","Saltetja-les 10 min fins que estiguin toves.","Hi trenca els ous a sobre i cou 3 min tapat."]],
+["Crep de pernil, formatge i espinacs",["Ous","Llet","Pernil dolç","Formatge","Espinacs"],["Bat els ous amb la llet per fer la massa i cou-la a la paella com una crep fina.","Saltetja els espinacs 2 min.","Farceix la crep amb pernil, formatge i espinacs i plega-la."]],
+["Compota de poma i plàtan",["Poma","Plàtan","Taronja"],["Pela i talla la poma i el plàtan a trossos.","Cou-ho 15 min amb el suc de la taronja.","Aixafa-ho amb una forquilla i serveix tèbia o freda."]],
+["Pastís de verdures i formatge",["Ous","Nata","Carbassó","Pastanaga","Formatge"],["Ratlla el carbassó i la pastanaga i saltetja-ho 5 min.","Barreja amb els ous, la nata i el formatge.","Couen-ho al forn a 180 °C durant 30 min."]],
+["Peix amb verdures",["Peix fresc","Pebrot","Ceba","Albergínia"],["Talla les verdures a tires i couen-les a la paella 10 min.","Afegeix-hi el peix.","Cou 4-5 min per banda i ajusta de sal."]],
+["Peix al forn amb patata",["Peix fresc","Patata","All"],["Talla la patata a rodanxes i couen-la 20 min a 200 °C.","Posa-hi el peix amb all i oli.","Torna-ho al forn 12-15 min."]]];
+const R_RAW=`Cigrons saltejats amb espinacs|Cigrons,Espinacs,All|Daura l'all laminat amb oli.;Afegeix els espinacs i saltetja 2 min.;Incorpora els cigrons escorreguts i escalfa 5 min.
+Llenties estofades|Llenties,Pastanaga,Ceba,Pebrot|Sofregeix ceba, pastanaga i pebrot picats 8 min.;Afegeix les llenties i aigua fins cobrir.;Cou 25 min a foc suau.
+Hummus casolà|Cigrons,All,Pa|Tritura els cigrons amb all, oli, sal i una mica d'aigua.;Ajusta la textura fins que sigui cremosa.;Serveix amb pa torrat.
+Bròquil gratinat|Bròquil,Formatge,Nata|Bull el bròquil 5 min i escorre'l.;Cobreix-lo amb nata i formatge ratllat.;Gratina al forn 10 min a 200 °C.
+Coliflor al forn|Coliflor,Formatge,All|Talla la coliflor a rams i bull-la 5 min.;Posa-la en una safata amb all, oli i formatge.;Couen-la a 200 °C durant 20 min.
+Salmó al forn amb verdures|Salmó,Carbassó,Pebrot|Talla les verdures a rodanxes i posa-les a la safata.;Col·loca-hi el salmó amb sal i oli.;Forn a 200 °C durant 15-18 min.
+Salmó amb arròs|Salmó,Arròs,Ceba|Cou l'arròs 18 min.;Daura el salmó amb la ceba tallada fina 3 min per banda.;Serveix el salmó sobre l'arròs.
+Gambes a l'all|Gambes,All,Pa|Daura molts alls laminats amb oli.;Afegeix les gambes i salta-les 2 min per banda.;Serveix amb pa.
+Arròs amb gambes|Arròs,Gambes,Tomàquet,Pebrot|Sofregeix pebrot i tomàquet 8 min.;Afegeix l'arròs i el doble d'aigua; cou 15 min.;Posa-hi les gambes els últims 3 min.
+Cuscús amb verdures|Cuscús,Pebrot,Carbassó,Ceba|Saltetja les verdures a daus 10 min.;Hidrata el cuscús amb aigua bullent, tapat 5 min.;Barreja-ho tot i amaneix.
+Cuscús amb pollastre|Cuscús,Pollastre,Pastanaga|Daura el pollastre a daus amb la pastanaga 10 min.;Hidrata el cuscús amb aigua bullent 5 min.;Serveix el pollastre sobre el cuscús.
+Salsitxes amb patates|Salsitxes,Patata,Ceba|Talla la patata i la ceba i fregeix-les a foc mitjà.;Afegeix les salsitxes senceres.;Cou-ho tapat 20 min, girant-les.
+Pasta amb salsitxes|Pasta,Salsitxes,Tomàquet|Desfés les salsitxes a la paella 5 min.;Afegeix tomàquet ratllat i cou 8 min.;Barreja amb la pasta bullida.
+Mongetes tendres amb patata|Mongetes tendres,Patata,Pernil dolç|Bull les mongetes amb la patata a trossos 20 min.;Escorre i saltetja-ho amb pernil a daus.;Ajusta de sal i serveix.
+Maduixes amb iogurt|Maduixes,Iogurt|Renta i talla les maduixes.;Posa-les en un bol amb el iogurt.;Serveix fred.
+Batut de maduixa|Maduixes,Llet,Plàtan|Talla la fruita a trossos.;Tritura-ho tot amb la llet.;Serveix ben fred.
+Pera al forn|Pera,Mantega|Talla les peres per la meitat i treu el cor.;Posa-hi un trosset de mantega.;Forn a 180 °C durant 25 min.
+Amanida de pera i formatge|Enciam,Pera,Formatge|Talla l'enciam i la pera a trossos.;Afegeix formatge a daus.;Amaneix amb oli i vinagre.
+Pastís de poma|Poma,Ous,Mantega,Llet|Bat els ous amb la mantega i la llet.;Afegeix la poma a làmines.;Forn a 180 °C durant 35 min.
+Crema de bròquil|Bròquil,Patata,Ceba|Talla totes les verdures.;Cou-les 20 min en aigua amb sal.;Tritura-ho fins que quedi fi.
+Crema de pastanaga|Pastanaga,Ceba,Nata|Cou la pastanaga i la ceba 25 min.;Tritura-ho amb una mica de l'aigua.;Acaba amb un raig de nata.
+Sopa de llenties amb salsitxes|Llenties,Salsitxes,Patata|Posa les llenties i la patata a trossos en aigua.;Afegeix les salsitxes a rodanxes.;Cou 30 min a foc suau.
+Arròs al forn|Arròs,Salsitxes,Tomàquet,Cigrons|Sofregeix salsitxes i tomàquet en una cassola.;Afegeix arròs, cigrons i el doble de brou o aigua.;Forn a 200 °C durant 20 min.
+Pollastre amb pebrots|Pollastre,Pebrot,Ceba,Tomàquet|Daura el pollastre a trossos.;Afegeix ceba, pebrot i tomàquet picats.;Cou tapat 25 min.
+Pollastre arrebossat|Pollastre,Ous,Pa|Talla el pollastre a filets i passa'ls per ou batut.;Reboza'ls amb pa ratllat.;Fregeix-los 3-4 min per banda.
+Croquetes de pernil|Pernil dolç,Llet,Ceba,Ous|Sofregeix ceba i pernil picats i afegeix llet espessida.;Refreda la massa i forma les croquetes.;Passa-les per ou i fregeix-les.
+Pizza de pa|Pa,Tomàquet,Formatge,Pernil dolç|Obre el pa per la meitat i posa-hi tomàquet.;Afegeix pernil i formatge.;Forn a 200 °C durant 8 min.
+Sandvitx d'ou i tomàquet|Pa,Ous,Tomàquet,Enciam|Cuina l'ou a la planxa.;Talla el tomàquet i renta l'enciam.;Munta-ho tot dins del pa.
+Torrades de plàtan|Pa,Plàtan,Mantega|Torra el pa i unta'l amb mantega.;Posa-hi plàtan a rodanxes.;Serveix tebi.
+Truita de bolets|Ous,Bolets,Ceba|Saltetja bolets i ceba 8 min.;Afegeix els ous batuts.;Quallala 3 min per banda.
+Bolets saltejats amb ou|Bolets,Ous,All|Saltetja els bolets amb all 6 min.;Trenca-hi els ous a sobre.;Cou tapat 3 min.
+Pastís de patata i carn|Carn picada,Patata,Ceba,Llet|Sofregeix la carn amb ceba.;Fes un puré amb patata bullida i llet.;Cobreix la carn amb el puré i gratina 15 min.
+Pasta bolonyesa|Pasta,Carn picada,Tomàquet,Ceba|Sofregeix la ceba i la carn 8 min.;Afegeix tomàquet ratllat i cou 15 min.;Serveix sobre la pasta bullida.
+Pebrots farcits|Pebrot,Carn picada,Arròs,Ceba|Barreja carn crua, arròs cuit i ceba sofregida.;Farceix els pebrots buidats.;Forn a 190 °C durant 40 min.
+Albergínies gratinades|Albergínia,Tomàquet,Formatge|Talla l'albergínia a rodanxes i planxa-la.;Alterna capes amb tomàquet i formatge.;Gratina al forn 15 min.
+Carbassons farcits|Carbassó,Carn picada,Formatge|Buida els carbassons per la meitat.;Farceix-los amb carn saltejada i formatge.;Forn a 200 °C durant 25 min.
+Mandonguilles|Carn picada,Ous,Pa,All|Barreja carn, ou, all picat i pa remullat.;Forma boletes i enfarina-les.;Fregeix-les i acaba-les en salsa 10 min.
+Amanida de cigrons|Cigrons,Tomàquet,Ceba,Tonyina llauna|Escorre els cigrons.;Talla tomàquet i ceba a daus.;Barreja-ho amb la tonyina i amaneix.
+Amanida de taronja|Taronja,Ceba,Enciam|Pela la taronja i talla-la a gajos.;Posa-la sobre l'enciam amb ceba fina.;Amaneix amb oli i sal.
+Pa de plàtan|Plàtan,Ous,Mantega|Aixafa els plàtans i barreja amb ous i mantega.;Aboca-ho en un motlle.;Forn a 180 °C durant 40 min.
+Flam d'ou|Llet,Ous|Bat els ous amb la llet.;Aboca-ho en motlles amb caramel.;Cou al bany maria 40 min.
+Arròs amb llet|Arròs,Llet,Taronja|Cou l'arròs amb la llet i pell de taronja.;Remena sovint 30 min.;Serveix tebi o fred.
+Iogurt amb fruita|Iogurt,Poma,Plàtan|Talla la fruita a trossets.;Posa-la dins del iogurt.;Serveix fred.
+Pasta amb tonyina|Pasta,Tonyina llauna,Tomàquet|Bull la pasta.;Sofregeix el tomàquet 8 min i afegeix la tonyina.;Barreja-ho tot.
+Patates amb ou i pernil|Patata,Ous,Pernil dolç|Fregeix la patata a daus.;Afegeix el pernil.;Trenca-hi els ous a sobre i remena.
+Pastanagues glacejades|Pastanaga,Mantega,Taronja|Talla la pastanaga a rodanxes.;Cou-la amb mantega i suc de taronja 12 min.;Redueix fins que quedi brillant.
+Truita de formatge i pernil|Ous,Formatge,Pernil dolç|Bat els ous i afegeix formatge i pernil a daus.;Aboca-ho a la paella calenta.;Quallala 3 min per banda.`.split("\n").forEach(l=>{const p=l.split("|");REC.push([p[0],p[1].split(","),p[2].split(";")])});
+const R2_RAW=`Bacallà amb samfaina|Bacallà,Pebrot,Albergínia,Tomàquet|Fes la samfaina: sofregeix pebrot, albergínia i tomàquet 20 min.;Posa-hi el bacallà dessalat a trossos.;Cou 8 min.
+Bacallà al forn amb patata|Bacallà,Patata,Ceba,All|Couen la patata i la ceba a rodanxes 20 min a 200 °C.;Afegeix el bacallà amb all.;Forn 10 min més.
+Botifarra amb mongetes|Botifarra,Mongetes tendres,All|Bull les mongetes 15 min.;Planxa la botifarra 4 min per banda.;Salteja les mongetes amb all i serveix-ho junt.
+Botifarra amb patates|Botifarra,Patata,Ceba|Fregeix la patata i la ceba a foc suau.;Afegeix la botifarra.;Cou tapat 20 min.
+Pasta carbonara|Pasta,Bacó,Ous,Formatge|Bull la pasta.;Daura el bacó a daus.;Barreja fora del foc amb ous batuts i formatge.
+Arròs amb bacó i ou|Arròs,Bacó,Ous|Cou l'arròs 18 min.;Daura el bacó.;Barreja-ho i corona amb ou a la planxa.
+Torrada d'alvocat|Pa,Alvocat,Ous|Torra el pa.;Aixafa l'alvocat amb sal i posa'l a sobre.;Corona amb ou a la planxa.
+Guacamole|Alvocat,Tomàquet,Ceba|Aixafa l'alvocat.;Afegeix tomàquet i ceba picats.;Amaneix amb sal i suc de taronja.
+Crema de porro i patata|Porro,Patata,Nata|Talla el porro i la patata.;Cou 25 min en aigua amb sal.;Tritura i afegeix nata.
+Porros gratinats|Porro,Pernil dolç,Formatge|Bull els porros 15 min.;Emboliqua'ls amb pernil.;Cobreix amb formatge i gratina 10 min.
+Col saltejada amb bacó|Col,Bacó,All|Talla la col fina i bull-la 5 min.;Daura el bacó amb all.;Afegeix la col i saltetja 5 min.
+Sopa de col i patata|Col,Patata,Pastanaga|Talla les verdures.;Cou-les 30 min en aigua amb sal.;Serveix amb un raig d'oli.
+Pizza margarita|Pa,Mozzarella,Tomàquet|Unta el pa amb tomàquet triturat.;Cobreix amb mozzarella.;Forn a 220 °C durant 8 min.
+Amanida caprese|Mozzarella,Tomàquet,Enciam|Talla tomàquet i mozzarella a rodanxes.;Posa-ho sobre l'enciam.;Amaneix amb oli i sal.
+Wrap de pollastre|Wraps,Pollastre,Enciam,Tomàquet|Daura el pollastre a tires.;Escalfa el wrap.;Farceix amb pollastre, enciam i tomàquet i enrotlla.
+Wrap de truita i formatge|Wraps,Ous,Formatge|Fes una truita fina amb formatge.;Escalfa el wrap.;Enrotlla la truita dins del wrap.
+Quesadilla de pernil|Wraps,Pernil dolç,Formatge|Posa pernil i formatge sobre un wrap i tapa'l amb un altre.;Planxa 3 min per banda.;Talla a triangles.
+Calamars a la planxa|Calamars,All|Neteja i talla els calamars.;Planxa'ls a foc fort 3 min.;Amaneix amb all picat i oli.
+Calamars arrebossats|Calamars,Ous|Talla els calamars a anelles.;Passa'ls per ou i farina.;Fregeix-los 2 min.
+Musclos al vapor|Musclos,All,Taronja|Neteja els musclos.;Cou-los tapats 5 min amb all i suc de taronja.;Descarta els que no s'obrin.
+Arròs amb musclos|Arròs,Musclos,Tomàquet|Obre els musclos al vapor.;Sofregeix tomàquet i afegeix l'arròs.;Cou 15 min amb l'aigua dels musclos.
+Amanida de raïm i formatge|Raïm,Formatge,Enciam|Talla el formatge a daus.;Posa-ho amb el raïm sobre l'enciam.;Amaneix suau.
+Macedònia|Poma,Plàtan,Raïm,Taronja|Talla tota la fruita a trossets.;Afegeix el suc de la taronja.;Serveix freda.
+Melo amb pernil|Meló,Pernil dolç|Talla el meló a trossos.;Emboliqua'ls amb pernil.;Serveix fred.
+Mató amb mel i fruita|Mató,Poma,Plàtan|Talla la fruita.;Posa-la sobre el mató.;Serveix fred.
+Truita de mató|Mató,Ous,Ceba|Sofregeix la ceba.;Barreja els ous amb el mató.;Quallala 3 min per banda.
+Nyoquis amb tomàquet|Nyoquis,Tomàquet,Formatge|Sofregeix tomàquet 8 min.;Bull els nyoquis fins que surin.;Barreja amb la salsa i formatge.
+Nyoquis amb bolets i nata|Nyoquis,Bolets,Nata|Saltetja els bolets.;Afegeix nata i redueix 3 min.;Barreja amb els nyoquis bullits.
+Amanida de remolatxa|Remolatxa,Enciam,Ceba|Cou la remolatxa 30 min i talla-la.;Posa-la sobre l'enciam amb ceba.;Amaneix amb oli i vinagre.
+Crema de remolatxa|Remolatxa,Patata,Ceba|Cou tot 30 min.;Tritura fins que quedi fi.;Serveix amb un raig de nata.
+Bol d'arròs i ou|Arròs,Ous,Alvocat|Cou l'arròs.;Fes un ou a la planxa.;Munta-ho amb alvocat a rodanxes.
+Arròs a la cubana|Arròs,Ous,Tomàquet,Plàtan|Cou l'arròs.;Fes una salsa de tomàquet i fregeix els ous i el plàtan.;Serveix-ho tot junt.
+Hamburguesa de pollastre|Pollastre,Pa,Ceba|Pica el pollastre i barreja amb ceba i sal.;Forma i planxa 5 min per banda.;Serveix dins del pa.
+Pollastre amb porros|Pollastre,Porro,Nata|Daura el pollastre.;Afegeix porro en rodanxes i cou 10 min.;Acaba amb nata.
+Fideus amb verdures|Pasta,Pastanaga,Carbassó,Ceba|Saltetja les verdures a daus.;Afegeix aigua i la pasta.;Cou 10 min.
+Llenties amb arròs|Llenties,Arròs,Ceba|Sofregeix la ceba.;Afegeix llenties, arròs i aigua.;Cou 25 min.
+Cigrons amb bacallà|Cigrons,Bacallà,Espinacs|Saltetja els espinacs.;Afegeix cigrons i bacallà dessalat.;Cou 10 min.
+Cigrons amb botifarra|Cigrons,Botifarra,Ceba|Sofregeix ceba.;Afegeix la botifarra a trossos i els cigrons.;Cou 10 min.
+Tonyina amb tomàquet|Tonyina llauna,Tomàquet,Ceba|Sofregeix ceba i tomàquet 10 min.;Hi afegeix la tonyina escorreguda.;Serveix amb pa o arròs.
+Pa amb tomàquet i pernil|Pa,Tomàquet,Pernil dolç|Talla el pa i torra'l.;Frega-hi tomàquet i oli.;Posa-hi pernil.
+Flaó ràpid de iogurt|Iogurt,Ous,Llet|Barreja iogurt, ous i llet.;Aboca-ho en motlles.;Forn a 170 °C durant 30 min.
+Pastís de plàtan i iogurt|Plàtan,Iogurt,Ous|Aixafa el plàtan.;Barreja amb iogurt i ous.;Forn a 180 °C durant 35 min.
+Pasta amb espinacs i nata|Pasta,Espinacs,Nata|Bull la pasta.;Saltetja els espinacs i afegeix nata.;Barreja-ho.
+Pasta amb bròquil|Pasta,Bròquil,All|Bull pasta i bròquil junts 9 min.;Daura all amb oli.;Barreja-ho tot.
+Truita de col|Ous,Col,Ceba|Bull la col i saltetja-la amb ceba.;Afegeix els ous batuts.;Quallala 3 min per banda.`.split("\n").forEach(l=>{const p=l.split("|");REC.push([p[0],p[1].split(","),p[2].split(";")])});
+let items=[],skip=0,show=false;
+try{items=JSON.parse(localStorage.getItem("rebost")||"[]")}catch(e){}
+const save=()=>{try{localStorage.setItem("rebost",JSON.stringify(items))}catch(e){}};
+const $=id=>document.getElementById(id);
+const days=e=>Math.round((new Date(e+"T00:00:00")-new Date(new Date().toDateString()))/864e5);
+const col=d=>d<0?"var(--red)":d<=3?"var(--red)":d<=7?"var(--org)":"var(--grn)";
+const txt=d=>d<0?`Caducat fa ${-d} d`:d===0?"Caduca avui":d===1?"Demà":`${d} dies`;
+let custom={};try{custom=JSON.parse(localStorage.getItem("propis")||"{}")}catch(e){}
+Object.assign(CAT,custom);
+function fillSel(v){$("name").innerHTML='<option value="">Tria un aliment…</option>'+Object.keys(CAT).sort((a,b)=>a.localeCompare(b,"ca")).map(k=>`<option value="${k}">${CAT[k][1]} ${k}</option>`).join("")+'<option value="__new">➕ Un altre aliment (crear-lo)…</option>';$("name").value=v||""}
+fillSel();
+$("name").onchange=()=>{const n=$("name").value==="__new";$("nw").style.display=n?"flex":"none";if(n)$("nn").focus();else if($("name").value&&!$("date").value){}};
+$("add").onclick=()=>{let n=$("name").value;
+ if(n==="__new"){const nm=$("nn").value.trim(),dd=parseInt($("nd").value);
+  if(!nm||!(dd>0)){$("msg").textContent="⚠️ Escriu el nom del nou aliment i quants dies sol durar.";return}
+  const ex=Object.keys(CAT).find(k=>k.toLowerCase()===nm.toLowerCase());
+  if(ex){n=ex}else{n=nm.charAt(0).toUpperCase()+nm.slice(1);CAT[n]=[dd,"🍽️"];custom[n]=CAT[n];try{localStorage.setItem("propis",JSON.stringify(custom))}catch(x){}}
+  $("nn").value="";$("nd").value="";$("nw").style.display="none";fillSel(n)}
+ if(!n||!CAT[n]){$("msg").textContent="⚠️ Tria un aliment de la llista o crea'n un de nou.";$("name").focus();return}
+ let e=$("date").value;if(!e){const x=new Date();x.setDate(x.getDate()+CAT[n][0]);e=x.toISOString().slice(0,10)}
+ items.push({id:Date.now(),n,e,l:$("loc").value});
+ if(pend){codes[pend]=n;try{localStorage.setItem("codis",JSON.stringify(codes))}catch(x){}pend=null;$("msg").textContent="Producte guardat: el pròxim cop el reconeixerem sol."}
+ fillSel("");$("date").value="";$("code").value="";skip=0;save();render()};
+function del(id){items=items.filter(i=>i.id!==id);skip=0;save();render()}
+function ranked(){
+ const have={};items.forEach(i=>{const d=days(i.e);if(d<0)return;if(!(i.n in have)||d<have[i.n])have[i.n]=d});
+ return REC.map(r=>{let s=0,h=[],m=[],k=0;r[1].forEach(g=>{if(g in have){h.push(g);const d=have[g];if(d<=7)k++;s+=d<=3?4:d<=7?2:1}else m.push(g)});
+  return{r,s:s+(k>1?4*(k-1):0)-m.length*1.5,h,m,have,k}}).filter(x=>x.k>0).sort((a,b)=>b.s-a.s)}
+function render(){
+ const sorted=[...items].sort((a,b)=>a.e.localeCompare(b.e));
+ const urg=sorted.filter(i=>days(i.e)<=3);
+ const exp=sorted.filter(i=>days(i.e)<0),near=sorted.filter(i=>days(i.e)>=0&&days(i.e)<=3);
+ $("alert").innerHTML=urg.length?`<div class="alert"><b class="t">⚠️ ${exp.length?"Tens aliments caducats!":"Aliments a punt de caducar!"}</b>${exp.length?"Llença'ls o revisa'ls: ":""}${exp.map(i=>`<span class="chip">⛔ ${CAT[i.n]?CAT[i.n][1]:"🍽️"} ${i.n}</span>`).join("")}${near.length&&exp.length?"<br>A punt de caducar: ":""}${near.map(i=>`<span class="chip o">${CAT[i.n]?CAT[i.n][1]:"🍽️"} ${i.n} · ${txt(days(i.e))}</span>`).join("")}</div>`:`<div class="alert ok" style="border-color:var(--grn);background:color-mix(in srgb,var(--grn) 12%,var(--card))">✅ Tot en ordre: res no caduca en els propers 3 dies.</div>`;
+ $("cnt").textContent=`(${items.length})`;
+ $("list").innerHTML=sorted.length?sorted.map(i=>{const d=days(i.e),c=col(d),u=d<=3,pc=d<0?18:u?14:d<=7?8:0;const ic=d<0?"⛔ CADUCAT":u?"🔴 "+txt(d).toUpperCase():d<=7?"🟠 "+txt(d):"🟢 "+txt(d);return`<div class="it${u?" u":""}" style="border-left-color:${c};background:color-mix(in srgb,${c} ${pc}%,transparent)"><span class="em">${CAT[i.n]?CAT[i.n][1]:"🍽️"}</span><div class="n">${i.n}<small>${i.l} · caduca el ${i.e}</small></div><span class="b" style="background:${c}">${ic}</span><button class="x" onclick="del(${i.id})" title="Eliminar">✕</button></div>`}).join(""):`<div class="empty">El rebost és buit. Escaneja o afegeix el teu primer aliment!</div>`;
+ const rk=ranked();
+ if(!rk.length){$("rec").innerHTML=`<div class="empty">Cap recepta urgent ara mateix. Quan tinguis aliments a punt de caducar, te n'recomanarem.</div>`;return}
+ const x=rk[skip%rk.length];
+ let h=`<h3 style="margin:0 0 6px">${x.r[0]}</h3><div>`+x.r[1].map(g=>x.h.includes(g)?`<span class="tag h">${x.have[g]<=3?"⏰ ":"✓ "}${g}</span>`:`<span class="tag u">Falta: ${g}</span>`).join("")+`</div>`;
+ const ex=x.h.filter(g=>x.have[g]<=7);
+ if(ex.length>1)h+=`<div class="alert" style="margin:10px 0 0;padding:10px 12px;font-size:.95rem"><b>🔥 Gasta ${ex.length} aliments alhora:</b> ${ex.map(g=>(CAT[g]?CAT[g][1]:"")+" "+g+" ("+txt(x.have[g])+")").join(" + ")}</div>`;
+ else if(ex.length)h+=`<p style="margin:8px 0 0"><b>Aprofita ${ex[0]}</b> (${txt(x.have[ex[0]])})</p>`;
+ h+=`<p class="sub" style="margin:8px 0">Tens ${x.h.length} de ${x.r[1].length} ingredients.</p>`;
+ if(show)h+=`<b>Passos:</b><ol>${x.r[2].map(s=>`<li>${s}</li>`).join("")}</ol><div class="row"><button onclick="show=false;render()">Tornar</button><button class="g" onclick="skip++;show=false;render()">Una altra recepta</button></div>`;
+ else h+=`<p style="margin:10px 0"><b>La vols cuinar?</b></p><div class="row"><button onclick="show=true;render()">Sí, mostra'm els passos</button><button class="g" onclick="skip++;render()">No, una altra</button></div>`;
+ if(items.some(i=>days(i.e)<0))h+=`<p class="sub" style="font-size:.8rem;margin:10px 0 0">Els aliments caducats no es fan servir a les receptes, per seguretat.</p>`;
+ $("rec").innerHTML=h}
+let codes={},pend=null,stream=null,timer=null;
+try{codes=JSON.parse(localStorage.getItem("codis")||"{}")}catch(e){}
+function stopCam(){clearInterval(timer);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$("vid").style.display="none";$("scan").textContent="Obrir càmera"}
+function fill(n){const key=Object.keys(CAT).find(k=>k.toLowerCase()===n.toLowerCase())||Object.keys(CAT).find(k=>n.toLowerCase().includes(k.toLowerCase()));
+ if(!key){$("name").value="";$("date").value="";$("name").focus();return false}
+ $("name").value=key;const d=new Date();d.setDate(d.getDate()+CAT[key][0]);$("date").value=d.toISOString().slice(0,10);return true}
+async function handle(code){
+ $("code").value=code;
+ if(codes[code]&&fill(codes[code])){pend=null;const n=codes[code],e=$("date").value;$("add").onclick();$("msg").textContent="✅ "+n+" afegit al rebost (caduca el "+e+", data estimada). Si no és correcta, elimina'l amb ✕ i afegeix-lo a mà amb la data de l'envàs.";return}
+ $("msg").textContent="Buscant el producte…";pend=code;
+ try{const c=new AbortController();setTimeout(()=>c.abort(),4000);
+  const r=await fetch("https://world.openfoodfacts.org/api/v2/product/"+code+".json?fields=product_name,brands",{signal:c.signal});
+  const j=await r.json();
+  if(j.status===1&&j.product&&j.product.product_name){if(fill(j.product.product_name)){$("msg").textContent="✅ Trobat: "+j.product.product_name+". Escriu la data impresa a l'envàs i prem Afegir.";}else{$("msg").textContent="Producte: "+j.product.product_name+". Tria de la llista a quin aliment correspon.";}return}
+ }catch(e){}
+ $("msg").textContent="Codi nou ("+code+"). Tria de la llista quin aliment és (o crea'n un de nou) i prem Afegir: el recordarem per sempre.";$("name").focus()}
+$("lookup").onclick=()=>{const c=$("code").value.trim();if(c)handle(c)};
+$("scan").onclick=async()=>{
+ if(stream){stopCam();return}
+ if(!("BarcodeDetector" in window)){$("msg").textContent="Aquest navegador no pot escanejar. Prova Chrome a Android o escriu el codi a mà.";return}
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}})}catch(e){$("msg").textContent="No hi ha accés a la càmera. Obre aquest enllaç directament al navegador i accepta el permís, o escriu el codi.";return}
+ const v=$("vid");v.srcObject=stream;v.style.display="block";await v.play();$("scan").textContent="Tancar càmera";$("msg").textContent="Escanejant…";
+ const det=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e"]});
+ timer=setInterval(async()=>{try{const r=await det.detect(v);if(r.length){const c=r[0].rawValue;stopCam();handle(c)}}catch(e){}},350)};
+render();
+</script>
+</body>
+</html>
